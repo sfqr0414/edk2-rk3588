@@ -373,6 +373,14 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&dc_det_pin>;
 	};
+
+	typec_extcon_bridge: typec-extcon {
+		compatible = "linux,typec-extcon-bridge";
+		usb-role-switch;
+		orientation-switch;
+		mode-switch;
+		svid = /bits/ 16 <0xff01>;
+	};
 };
 
 &cpu_b0 {
@@ -399,23 +407,22 @@
 	cpu-supply = <&vdd_cpu_l>;
 };
 
+&cdn_dp {
+	status = "okay";
+	extcon = <&typec_extcon_bridge>;
+	phys = <&tcphy0_dp>;
+};
+
 &edp {
 	force-hpd;
 	pinctrl-names = "default";
 	pinctrl-0 = <&edp_hpd>;
 	status = "okay";
+};
 
-	ports {
-		edp_out: port@1 {
-			reg = <1>;
-			#address-cells = <1>;
-			#size-cells = <0>;
-
-			edp_out_panel: endpoint@0 {
-				reg = <0>;
-				remote-endpoint = <&panel_in_edp>;
-			};
-		};
+&edp_out {
+	edp_out_panel: endpoint {
+		remote-endpoint = <&panel_in_edp>;
 	};
 };
 
@@ -692,6 +699,8 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&fusb0_int_pin>;
 		vbus-supply = <&vbus_typec>;
+		usb-role-switch = <&typec_extcon_bridge>;
+		extcon = <&typec_extcon_bridge>;
 
 		connector {
 			compatible = "usb-c-connector";
@@ -700,10 +709,19 @@
 			op-sink-microwatt = <1000000>;
 			power-role = "dual";
 			sink-pdos =
-				<PDO_FIXED(5000, 2500, PDO_FIXED_USB_COMM)>;
+				<PDO_FIXED(5000, 2500, PDO_FIXED_USB_COMM | PDO_FIXED_DUAL_ROLE | PDO_FIXED_DATA_SWAP)>;
 			source-pdos =
-				<PDO_FIXED(5000, 1400, PDO_FIXED_USB_COMM)>;
+				<PDO_FIXED(5000, 1400, PDO_FIXED_USB_COMM | PDO_FIXED_DUAL_ROLE | PDO_FIXED_DATA_SWAP)>;
 			try-power-role = "sink";
+			mode-switch = <&typec_extcon_bridge>;
+			orientation-switch = <&typec_extcon_bridge>;
+
+			altmodes {
+				dp {
+					svid = /bits/ 16 <0xff01>;
+					vdo = <0x1c46>;
+				};
+			};
 
 			ports {
 				#address-cells = <1>;
@@ -890,6 +908,12 @@
 		};
 	};
 
+	wifi {
+		wifi_host_wake_l: wifi-host-wake-l {
+			rockchip,pins = <0 RK_PA3 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+	};
+
 	wireless-bluetooth {
 		bt_wake_pin: bt-wake-pin {
 			rockchip,pins = <2 RK_PD3 RK_FUNC_GPIO &pcfg_pull_none>;
@@ -947,7 +971,19 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&sdio0_bus4 &sdio0_cmd &sdio0_clk>;
 	sd-uhs-sdr104;
+	#address-cells = <1>;
+	#size-cells = <0>;
 	status = "okay";
+
+	brcmf: wifi@1 {
+		compatible = "brcm,bcm4329-fmac";
+		reg = <1>;
+		interrupt-parent = <&gpio0>;
+		interrupts = <RK_PA3 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-names = "host-wake";
+		pinctrl-names = "default";
+		pinctrl-0 = <&wifi_host_wake_l>;
+	};
 };
 
 &sdhci {
@@ -966,10 +1002,12 @@
 		reg = <0>;
 		m25p,fast-read;
 		spi-max-frequency = <10000000>;
+		vcc-supply = <&vcc_3v0>;
 	};
 };
 
 &tcphy0 {
+	extcon = <&typec_extcon_bridge>;
 	status = "okay";
 };
 
@@ -1003,6 +1041,8 @@
 
 &u2phy0 {
 	status = "okay";
+	extcon = <&typec_extcon_bridge>;
+	extcon,ignore-usb;
 
 	u2phy0_otg: otg-port {
 		status = "okay";
@@ -1079,7 +1119,9 @@
 };
 
 &usbdrd_dwc3_0 {
-	dr_mode = "host";
+	dr_mode = "otg";
+	extcon = <&typec_extcon_bridge>;
+	snps,usb3-phy-reset-quirk;
 	status = "okay";
 };
 

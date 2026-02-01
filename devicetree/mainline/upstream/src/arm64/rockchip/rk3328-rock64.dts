@@ -136,6 +136,11 @@
 	status = "okay";
 };
 
+&gpu {
+	status = "okay";
+	mali-supply = <&vdd_logic>;
+};
+
 &gmac2io {
 	assigned-clocks = <&cru SCLK_MAC2IO>, <&cru SCLK_MAC2IO_EXT>;
 	assigned-clock-parents = <&gmac_clkin>, <&gmac_clkin>;
@@ -150,6 +155,10 @@
 	tx_delay = <0x24>;
 	rx_delay = <0x18>;
 	status = "okay";
+};
+
+&gpu {
+	mali-supply = <&vdd_logic>;
 };
 
 &hdmi {
@@ -343,6 +352,7 @@
 
 		/* maximum speed for Rockchip SPI */
 		spi-max-frequency = <50000000>;
+		vcc-supply = <&vcc_io>;
 	};
 };
 

@@ -19,6 +19,38 @@
 		regulator-max-microvolt = <5000000>;
 		vin-supply = <&vcc5v0_sys>;
 	};
+
+	sdio_pwrseq: sdio-pwrseq {
+		compatible = "mmc-pwrseq-simple";
+		clocks = <&hym8563>;
+		clock-names = "ext_clock";
+	    pinctrl-names = "default";
+	    pinctrl-0 = <&wifi_enable_h>;
+	    /*
+	    * On the module itself this is one of these (depending
+	    * on the actual card populated):
+	    * - SDIO_RESET_L_WL_REG_ON
+	    * - PDN (power down when low)
+	    */
+	    post-power-on-delay-ms = <200>;
+		reset-gpios = <&gpio2 RK_PC5 GPIO_ACTIVE_LOW>;
+		status = "okay";
+	};
+
+	wireless_wlan: wireless-wlan {
+        compatible = "android,bcmdhd_wlan";
+		reg = <1>;
+        wifi_chip_type = "ap6611";
+        pinctrl-names = "default";
+        pinctrl-0 = <&wifi_host_wake_irq>;
+		wl_reg_on-gpios = <&gpio2 RK_PC5 GPIO_ACTIVE_HIGH>;
+        wl_host_wake-gpios = <&gpio0 RK_PB0 GPIO_ACTIVE_HIGH>;
+        interrupt-parent = <&gpio0>;
+        interrupts = <RK_PB0 IRQ_TYPE_LEVEL_HIGH>;
+        interrupt-names = "host-wake";
+        status = "okay";
+    };
+
 };
 
 &headphone_amp {
@@ -87,6 +119,30 @@
 			rockchip,pins = <3 RK_PD5 RK_FUNC_GPIO &pcfg_pull_none>;
 		};
 	};
+
+	wireless-bluetooth {
+		bt_reg_on: bt-reg-on {
+			rockchip,pins = <4 RK_PC4 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+
+		bt_wake_host: bt-wake-host {
+			rockchip,pins = <0 RK_PA0 RK_FUNC_GPIO &pcfg_pull_down>;
+		};
+
+		host_wake_bt: host-wake-bt {
+			rockchip,pins = <4 RK_PC5 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+	};
+
+	wireless-wlan {
+		wifi_enable_h: wifi-enable-h {
+			rockchip,pins = <2 RK_PC5 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+
+		wifi_host_wake_irq: wifi-host-wake-irq {
+			rockchip,pins = <0 RK_PB0 RK_FUNC_GPIO &pcfg_pull_down>;
+		};
+	};
 };
 
 &pwm4 {
@@ -120,6 +176,28 @@
 	phy-supply = <&vcc5v0_usb20>;
 };
 
+&uart7 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart7m0_xfer &uart7m0_ctsn &uart7m0_rtsn>;
+	uart-has-rtscts;
+	status = "okay";
+
+	bluetooth {
+		compatible = "brcm,bcm43438-bt";
+		clocks = <&hym8563>;
+		clock-names = "lpo";
+		device-wakeup-gpios = <&gpio4 RK_PC5 GPIO_ACTIVE_HIGH>;
+		interrupt-parent = <&gpio0>;
+		interrupts = <RK_PA0 IRQ_TYPE_EDGE_FALLING>;
+		interrupt-names = "host-wakeup";
+		pinctrl-names = "default";
+		pinctrl-0 = <&bt_reg_on>, <&host_wake_bt>, <&bt_wake_host>;
+		shutdown-gpios = <&gpio4 RK_PC4 GPIO_ACTIVE_HIGH>;
+		vbat-supply = <&vcc_3v3_s3>;
+		vddio-supply = <&vcc_1v8_s3>;
+	};
+};
+
 &usb_host0_xhci {
 	dr_mode = "host";
 };
@@ -139,4 +217,41 @@
 	gpios = <&gpio3 RK_PD5 GPIO_ACTIVE_HIGH>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&usb_host_pwren>;
+};
+
+&sdio {		
+    #address-cells = <1>;
+	#size-cells = <0>;
+	bus-width = <4>;
+	cap-sdio-irq;                   
+    cap-sd-highspeed;
+	keep-power-in-suspend;    
+    disable-wp; 
+	sd-uhs-sdr104;
+    pwrseq-1.8v;
+	max-frequency = <150000000>;
+	mmc-pwrseq = <&sdio_pwrseq>;
+	non-removable;
+	no-mmc;
+	no-sd;
+	pinctrl-names = "default";
+	pinctrl-0 = <&sdiom0_pins>;
+	status = "okay";
+};
+
+
+&sdiom0_pins {
+	rockchip,pins =
+		/* sdio_clk_m0 */
+		<2 RK_PB3 2 &pcfg_pull_none>,
+		/* sdio_cmd_m0 */
+		<2 RK_PB2 2 &pcfg_pull_up>,
+		/* sdio_d0_m0 */
+		<2 RK_PA6 2 &pcfg_pull_up>,
+		/* sdio_d1_m0 */
+		<2 RK_PA7 2 &pcfg_pull_up>,
+		/* sdio_d2_m0 */
+		<2 RK_PB0 2 &pcfg_pull_up>,
+		/* sdio_d3_m0 */
+		<2 RK_PB1 2 &pcfg_pull_up>;
 };
