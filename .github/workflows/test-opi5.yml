@@ -1,0 +1,12 @@
+name: Merged into build-opi5
+on: []
+
+# This workflow was merged into `.github/workflows/build-opi5.yml`.
+# To create releases, push tags and the combined workflow will build both Debug and Release
+# configurations and create a draft GitHub release automatically.
+
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "The release workflow has been merged into build-opi5.yml. See that file for details."
