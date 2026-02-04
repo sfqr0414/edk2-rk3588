@@ -389,7 +389,20 @@ FdtFixupPcieResources (
         continue;
       }
 
+      /*
       RidMap[0] = CpuToFdt32 (PCIE_BUS_BASE (Segment) << 8);
+      RidMap[2] = RidMap[0];
+      RidMap[3] = CpuToFdt32 (PCIE_BUS_COUNT << 8);
+      */
+      
+      UINT32 BaseRid = PCIE_BUS_BASE (Segment) << 8;
+
+      if (BaseRid <= 0x100) { 
+          DEBUG ((DEBUG_INFO, "FdtPlatform: RID %d is too low, shifting to 256 to avoid NPU conflict.\n", BaseRid));
+          BaseRid = 0x100;
+      }
+
+      RidMap[0] = CpuToFdt32 (BaseRid);
       RidMap[2] = RidMap[0];
       RidMap[3] = CpuToFdt32 (PCIE_BUS_COUNT << 8);
     }
