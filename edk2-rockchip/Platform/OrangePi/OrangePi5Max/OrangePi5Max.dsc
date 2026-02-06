@@ -80,9 +80,9 @@
   gRK3588TokenSpaceGuid.PcdComboPhy0Switchable|TRUE
   gRK3588TokenSpaceGuid.PcdComboPhy1Switchable|TRUE
   gRK3588TokenSpaceGuid.PcdComboPhy2Switchable|TRUE
-  gRK3588TokenSpaceGuid.PcdComboPhy0ModeDefault|$(COMBO_PHY_MODE_UNCONNECTED)
-  gRK3588TokenSpaceGuid.PcdComboPhy1ModeDefault|$(COMBO_PHY_MODE_UNCONNECTED)
-  gRK3588TokenSpaceGuid.PcdComboPhy2ModeDefault|$(COMBO_PHY_MODE_UNCONNECTED)
+  gRK3588TokenSpaceGuid.PcdComboPhy0ModeDefault|$(COMBO_PHY_MODE_PCIE)
+  gRK3588TokenSpaceGuid.PcdComboPhy1ModeDefault|$(COMBO_PHY_MODE_PCIE)
+  gRK3588TokenSpaceGuid.PcdComboPhy2ModeDefault|$(COMBO_PHY_MODE_PCIE)
 
   #
   # USB/DP Combo PHY support flags and default values
